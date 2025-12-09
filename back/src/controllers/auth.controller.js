@@ -4,12 +4,15 @@ import authService from '../services/auth.service.js'
 async function register(c) {
   try {
     const data = c.req.valid('json')
+    console.log("REGISTER DATA:", data);
      await authService.register(data)
     return c.json({
       message: 'Registration successful. Please check your email for verification.'
     }, 201)
+  
   } catch (error) {
-    console.error(error)
+    // console.error(error)
+    console.error("REGISTER ERROR:", error);
     return c.json({ error: 'Registration failed' }, 400)
   }
 }

@@ -1,11 +1,12 @@
 import { sign, verify } from "hono/jwt";
 import env from "../config/env.js";
+
 async function generateToken(user) {
   const accessToken = await sign(
     {
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role, // important for adminGuard
       exp: Math.floor(Date.now() / 1000) + 60 * env.JWT_EXPIRES_IN,
     },
     env.JWT_SECRET

@@ -9,6 +9,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import Register from "./page/auth/register";
 
+import AdminAssociationsList from "./page/admin/AdminAssociationsList";
+import AdminAssociationDetail from "./page/admin/AdminAssociationDetail";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +33,9 @@ ReactDOM.createRoot(root).render(
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/register" element={<Register />} />
 
+{/* Admin routes */}
+        <Route path="/admin/associations" element={<AdminAssociationsList />} />
+        <Route path="/admin/associations/:id" element={<AdminAssociationDetail />} />
 
       </Routes>
       <ReactQueryDevtools initialIsOpen={false} />

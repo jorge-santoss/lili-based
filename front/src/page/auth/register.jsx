@@ -1,34 +1,52 @@
-'use client'
+// src/page/auth/register.jsx
+"use client";
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import { signUp } from "@/api/auth";
 
 export default function Register() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    setError('')
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+      setError("Passwords do not match");
+      return;
     }
 
-    // Here you would typically handle the registration logic
-    console.log('Registration attempt with:', { name, email, password })
-    // Reset form fields after submission
-    setName('')
-    setEmail('')
-    setPassword('')
-    setConfirmPassword('')
-  }
+    try {
+      await signUp({ email, password, firstname, lastname }); // match zod schema
+      setSuccess("Registration successful. Check your email for verification.");
+      setFirstname("");
+      setLastname("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (e) {
+      console.error(e);
+      setError("Registration failed");
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -40,20 +58,42 @@ export default function Register() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Name
+              <label
+                htmlFor="firstname"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                First name
               </label>
               <Input
-                id="name"
+                id="firstname"
                 type="text"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your first name"
+                value={firstname}
+                onChange={(e) => setFirstname(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="lastname"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Last name
+              </label>
+              <Input
+                id="lastname"
+                type="text"
+                placeholder="Enter your last name"
+                value={lastname}
+                onChange={(e) => setLastname(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Email
               </label>
               <Input
@@ -66,7 +106,10 @@ export default function Register() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Password
               </label>
               <Input
@@ -79,7 +122,10 @@ export default function Register() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="confirm-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="confirm-password"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Confirm Password
               </label>
               <Input
@@ -92,6 +138,7 @@ export default function Register() {
               />
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-600 text-sm">{success}</p>}
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full">
@@ -101,6 +148,5 @@ export default function Register() {
         </form>
       </Card>
     </div>
-  )
+  );
 }
-
