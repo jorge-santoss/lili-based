@@ -25,6 +25,25 @@ CREATE TABLE IF NOT EXISTS associations (
   created_at DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   updated_at DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
+
+CREATE TABLE IF NOT EXISTS restaurants (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  address TEXT,
+  email TEXT,
+  phone TEXT
+);
+
+CREATE TABLE IF NOT EXISTS bookings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  association_id INTEGER NOT NULL,
+  restaurant_id INTEGER NOT NULL,
+  meals_booked INTEGER NOT NULL,
+  booking_date DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  status TEXT NOT NULL DEFAULT 'CONFIRMED',
+  FOREIGN KEY (association_id) REFERENCES associations(id),
+  FOREIGN KEY (restaurant_id) REFERENCES restaurants(id)
+);
 `);
 
 export default db;

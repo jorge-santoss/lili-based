@@ -7,6 +7,8 @@ import authService from "../services/auth.service.js";
 import env from "../config/env.js";
 import { authGuard } from "../middlewares/authguard.js";
 import adminRouter from "./admin.router.js";
+import assoRouter from "./asso.router.js";
+
 
 
 const app = new Hono();
@@ -29,6 +31,9 @@ app.route("/api", authRouter);
 
 // Admin routes => /admin/...
 app.route("/admin", adminRouter);
+
+// Asso routes => /api/asso/...
+app.route("/api/asso", assoRouter);          // <--- add this
 
 app.get("/authenticated", authGuard(), (c) => {
   const user = c.get("user");

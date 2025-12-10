@@ -11,6 +11,7 @@ import Register from "./page/auth/register";
 
 import AdminAssociationsList from "./page/admin/AdminAssociationsList";
 import AdminAssociationDetail from "./page/admin/AdminAssociationDetail";
+import BookingsTest from "./page/asso/bookings-test.jsx";
 
 
 const queryClient = new QueryClient({
@@ -33,9 +34,15 @@ ReactDOM.createRoot(root).render(
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/register" element={<Register />} />
 
+       
+
+
 {/* Admin routes */}
         <Route path="/admin/associations" element={<AdminAssociationsList />} />
         <Route path="/admin/associations/:id" element={<AdminAssociationDetail />} />
+
+{/* Booking routes */}
+         <Route path="/asso/bookings-test" element={<BookingsTest />} />
 
       </Routes>
       <ReactQueryDevtools initialIsOpen={false} />
