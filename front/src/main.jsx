@@ -12,6 +12,8 @@ import Register from "./page/auth/register";
 import AdminAssociationsList from "./page/admin/AdminAssociationsList";
 import AdminAssociationDetail from "./page/admin/AdminAssociationDetail";
 import BookingsTest from "./page/asso/bookings-test.jsx";
+// import { R } from "@tanstack/react-query-devtools/build/legacy/ReactQueryDevtools-Cn7cKi7o";
+import AdminRestaurants from "./page/admin/AdminRestaurants";
 
 
 const queryClient = new QueryClient({
@@ -43,6 +45,9 @@ ReactDOM.createRoot(root).render(
 
 {/* Booking routes */}
          <Route path="/asso/bookings-test" element={<BookingsTest />} />
+
+         {/* Create Restaurant route */}
+         <Route path="/admin/restaurants" element={<AdminRestaurants />} />
 
       </Routes>
       <ReactQueryDevtools initialIsOpen={false} />

@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(255),
   role VARCHAR(50) DEFAULT 'ASSO_AGENT', -- or another sensible default
   verified BOOLEAN DEFAULT FALSE,
-  reset_token VARCHAR(255)
+  reset_token VARCHAR(255),
+  association_id INTEGER,                      
+  FOREIGN KEY (association_id) REFERENCES associations(id)
 );
 
 CREATE TABLE IF NOT EXISTS associations (

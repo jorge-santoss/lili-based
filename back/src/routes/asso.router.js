@@ -12,7 +12,7 @@ assoRouter.post("/bookings", async (c) => {
   try {
     const user = c.get("user"); // vient de authGuard, contient user.id, role, etc.
 
-console.log("ASSO POST user:", user);   // <--- add here
+    console.log("ASSO POST user:", user); // <--- add here
 
     // Pour l’instant on suppose que user.id = association_id
     // (on pourra ajuster si tu as une vraie table de liaison user ↔ association)
@@ -21,7 +21,7 @@ console.log("ASSO POST user:", user);   // <--- add here
     const body = await c.req.json();
     const restaurantId = Number(body.restaurantId);
     const mealsBooked = Number(body.mealsBooked);
-console.log("ASSO POST body:", body, { restaurantId, mealsBooked });
+    console.log("ASSO POST body:", body, { restaurantId, mealsBooked });
     if (!restaurantId || Number.isNaN(restaurantId)) {
       return c.json({ error: "Invalid restaurantId" }, 400);
     }
@@ -29,7 +29,10 @@ console.log("ASSO POST body:", body, { restaurantId, mealsBooked });
       return c.json({ error: "Invalid mealsBooked" }, 400);
     }
 
-    const associationId = user.id;  // <--- you forgot this line
+    const associationId = user.association_id; // <--- use link
+if (!associationId) {
+      return c.json({ error: "No association linked to this user" }, 400);
+    }
 
     const booking = await bookingService.createBooking({
       associationId,
@@ -37,8 +40,7 @@ console.log("ASSO POST body:", body, { restaurantId, mealsBooked });
       mealsBooked,
     });
 
-
-     console.log("ASSO POST created booking:", booking);
+    console.log("ASSO POST created booking:", booking);
     return c.json(booking, 201);
   } catch (err) {
     console.error("POST /asso/bookings ERROR:", err);
@@ -51,10 +53,14 @@ assoRouter.get("/bookings", async (c) => {
   try {
     const user = c.get("user");
 
-console.log("ASSO GET user:", user);    // <--- and here
+    console.log("ASSO GET user:", user); // <--- and here
 
-    const associationId = user.id; // même hypothèse temporaire
+    const associationId =user.association_id; 
+if (!associationId) {
+      return c.json({ error: "No association linked to this user" }, 400);
+    }
 
+    
     const rows = await bookingService.getBookingsForAssociation(associationId);
     return c.json(rows);
   } catch (err) {

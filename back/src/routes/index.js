@@ -8,6 +8,8 @@ import env from "../config/env.js";
 import { authGuard } from "../middlewares/authguard.js";
 import adminRouter from "./admin.router.js";
 import assoRouter from "./asso.router.js";
+import adminRestaurantsRouter from "./restaurants.admin.router.js";
+
 
 
 
@@ -34,6 +36,8 @@ app.route("/admin", adminRouter);
 
 // Asso routes => /api/asso/...
 app.route("/api/asso", assoRouter);          // <--- add this
+
+app.route("/admin/restaurants", adminRestaurantsRouter);
 
 app.get("/authenticated", authGuard(), (c) => {
   const user = c.get("user");
