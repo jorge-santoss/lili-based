@@ -91,8 +91,79 @@ async function updateAssociationMeals(id, meals_available) {
   return await db.prepare(`SELECT * FROM associations WHERE id = ?`).get(id);
 }
 
+async function updateAssociation(id, data) {
+  const fields = [];
+  const params = [];
+
+  if (typeof data.name !== "undefined") {
+    fields.push("name = ?");
+    params.push(data.name);
+  }
+  if (typeof data.address !== "undefined") {
+    fields.push("address = ?");
+    params.push(data.address);
+  }
+  if (typeof data.email !== "undefined") {
+    fields.push("email = ?");
+    params.push(data.email);
+  }
+  if (typeof data.phone !== "undefined") {
+    fields.push("phone = ?");
+    params.push(data.phone);
+  }
+  if (typeof data.contact_name !== "undefined") {
+    fields.push("contact_name = ?");
+    params.push(data.contact_name);
+  }
+  if (typeof data.meals_available !== "undefined") {
+    fields.push("meals_available = ?");
+    params.push(data.meals_available);
+  }
+
+  if (fields.length === 0) {
+    return await getAssociationById(id);
+  }
+
+  fields.push("updated_at = CURRENT_TIMESTAMP");
+
+  const sql = `
+    UPDATE associations
+    SET ${fields.join(", ")}
+    WHERE id = ?
+  `;
+  params.push(id);
+
+  const result = await db.prepare(sql).run(...params);
+  if (result.changes === 0) {
+    return null;
+  }
+
+  return await getAssociationById(id);
+}
+
+async function deleteAssociation(id) {
+  // 1) supprimer les bookings liés à cette asso
+  await db
+    .prepare("DELETE FROM bookings WHERE association_id = ?")
+    .run(id);
+
+  // 2) détacher les users liés à cette asso
+  await db
+    .prepare("UPDATE users SET association_id = NULL WHERE association_id = ?")
+    .run(id);
+
+  // 3) supprimer l'association
+  const result = await db
+    .prepare("DELETE FROM associations WHERE id = ?")
+    .run(id);
+
+  return result.changes > 0;
+}
+
 export default {
   getAllAssociations,
   getAssociationById,
   updateAssociationMeals,
+  updateAssociation,
+  deleteAssociation,
 };

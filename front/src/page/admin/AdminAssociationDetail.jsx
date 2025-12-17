@@ -1,16 +1,25 @@
 // src/page/admin/AdminAssociationDetail.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAssociation, updateAssociationMeals } from "../../api/admin.js";
-import { Input } from "@/components/ui/input";    // named import
-import { Button } from "@/components/ui/button";  // named import
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  getAssociation,
+  updateAssociationMeals,
+  updateAssociation,
+  deleteAssociation,
+} from "@/api/admin";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function AdminAssociationDetail() {
   const { id } = useParams();
+  const assocId = Number(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const assocId = Number(id);
 
   // Fetch association
   const {
@@ -24,108 +33,259 @@ export default function AdminAssociationDetail() {
     staleTime: 1000 * 60,
   });
 
-  // Local state for meals input
+  // Local state for fields
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [contactName, setContactName] = useState("");
   const [mealsValue, setMealsValue] = useState("");
+  const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
-  // Keep local input in sync when association loads/changes
+  // Sync local state when association loads
   useEffect(() => {
     if (association) {
+      setName(association.name ?? "");
+      setAddress(association.address ?? "");
+      setEmail(association.email ?? "");
+      setPhone(association.phone ?? "");
+      setContactName(association.contact_name ?? "");
       setMealsValue(association.meals_available ?? 0);
     }
   }, [association]);
 
-  // Mutation to update meals_available
-  const mutation = useMutation({
+  // Mutation to update association fields
+  const updateMutation = useMutation({
+    mutationFn: (payload) =>
+      updateAssociation(assocId, payload).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["admin-association", assocId]);
+      queryClient.invalidateQueries(["admin-associations"]);
+      setFormError("");
+      setSuccess("Association updated.");
+      setTimeout(() => setSuccess(""), 3000);
+    },
+    onError: () => {
+      setFormError("Failed to update association");
+    },
+  });
+
+  // Optional: meals-only mutation if still used elsewhere
+  const mealsMutation = useMutation({
     mutationFn: ({ id, mealsAvailable }) =>
       updateAssociationMeals(id, mealsAvailable).then((res) => res.data),
     onSuccess: () => {
-      // Invalidate the association query so it refetches fresh data
       queryClient.invalidateQueries(["admin-association", assocId]);
-      // Optionally invalidate list
       queryClient.invalidateQueries(["admin-associations"]);
     },
   });
 
-  if (isLoading) return <div>Loading association…</div>;
-  if (error) return <div>Error loading association</div>;
-  if (!association) return <div>Association not found</div>;
+  // Delete mutation
+  const deleteMut = useMutation({
+    mutationFn: () => deleteAssociation(assocId).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["admin-associations"]);
+      navigate("/admin/associations");
+    },
+    onError: (err) => {
+      console.error("Delete association error", err);
+      setDeleteError("Failed to delete association.");
+    },
+  });
 
-  const handleSave = async (e) => {
+  if (isLoading) {
+    return (
+      <div className="mx-auto mt-20 max-w-3xl px-4 text-sm text-zinc-600">
+        Loading association...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto mt-20 max-w-3xl px-4 text-sm text-red-600">
+        Failed to load association
+      </div>
+    );
+  }
+
+  if (!association) {
+    return (
+      <div className="mx-auto mt-20 max-w-3xl px-4 text-sm text-zinc-600">
+        Association not found.
+      </div>
+    );
+  }
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const parsed = Number(mealsValue);
-    if (Number.isNaN(parsed) || parsed < 0) {
-      return alert(
-        "Please enter a valid non-negative number for meals available."
-      );
+    setFormError("");
+
+    const mealsNum = Number(mealsValue);
+    if (Number.isNaN(mealsNum) || mealsNum < 0) {
+      setFormError("Meals available must be a non-negative number.");
+      return;
     }
-    try {
-      await mutation.mutateAsync({ id: assocId, mealsAvailable: parsed });
-      // Optionally show a success message
-      // navigate back to list or keep on page
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update meals available.");
-    }
+
+    updateMutation.mutate({
+      name,
+      address,
+      email,
+      phone,
+      contact_name: contactName,
+      meals_available: mealsNum,
+    });
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
-      <h2>Association details</h2>
+    <div className="mx-auto mt-20 max-w-3xl px-4 pb-10">
+      <button
+        type="button"
+        onClick={() => navigate("/admin/associations")}
+        className="mb-4 text-xs text-blue-600 hover:underline"
+      >
+        ← Back to associations
+      </button>
 
-      <div style={{ marginBottom: 12 }}>
-        <strong>Name</strong>
-        <div>{association.name}</div>
-      </div>
+      <h1 className="mb-4 text-lg font-semibold text-zinc-800">
+        Association #{association.id}
+      </h1>
 
-      <div style={{ marginBottom: 12 }}>
-        <strong>Address</strong>
-        <div>{association.address}</div>
-      </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <strong>Contact name</strong>
-        <div>{association.contact_name}</div>
-      </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <strong>Email</strong>
-        <div>{association.email}</div>
-      </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <strong>Phone</strong>
-        <div>{association.phone}</div>
-      </div>
-
-      <form onSubmit={handleSave} style={{ marginTop: 20 }}>
-        <div style={{ marginBottom: 8 }}>
-          <label
-            style={{ display: "block", marginBottom: 6, fontWeight: 600 }}
-          >
-            Meals available (admin only)
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
+      >
+        <div>
+          <label className="block text-xs font-medium text-zinc-700">
+            Name
           </label>
           <Input
-            type="number"
-            value={mealsValue}
-            onChange={(e) => setMealsValue(e.target.value)}
-            min={0}
-            className="w-40"
+            className="mt-1"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button type="submit" disabled={mutation.isLoading}>
-            {mutation.isLoading ? "Saving…" : "Save"}
-          </Button>
+        <div>
+          <label className="block text-xs font-medium text-zinc-700">
+            Address
+          </label>
+          <Input
+            className="mt-1"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">
+              Email
+            </label>
+            <Input
+              className="mt-1"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">
+              Phone
+            </label>
+            <Input
+              className="mt-1"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-zinc-700">
+            Contact name
+          </label>
+          <Input
+            className="mt-1"
+            value={contactName}
+            onChange={(e) => setContactName(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-zinc-700">
+            Meals available
+          </label>
+          <Input
+            type="number"
+            min={0}
+            className="mt-1"
+            value={mealsValue}
+            onChange={(e) => setMealsValue(e.target.value)}
+          />
+        </div>
+
+        {formError && (
+          <p className="text-xs text-red-600">{formError}</p>
+        )}
+        {success && (
+          <p className="text-xs text-emerald-600">{success}</p>
+        )}
+
+        <div className="mt-2 flex items-center gap-3">
           <Button
-            type="button"
-            variant="ghost"
-            onClick={() => navigate("/admin/associations")}
+            type="submit"
+            size="sm"
+            disabled={updateMutation.isLoading}
           >
-            Back to list
+            {updateMutation.isLoading ? "Saving..." : "Save changes"}
           </Button>
         </div>
       </form>
+
+      <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
+        <h2 className="mb-2 text-sm font-semibold text-red-700">
+          Danger zone
+        </h2>
+
+        {deleteError && (
+          <p className="mb-2 text-xs text-red-600">{deleteError}</p>
+        )}
+
+        {!confirmDelete ? (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setConfirmDelete(true)}
+          >
+            Delete association
+          </Button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-red-700">
+              Are you sure? This action cannot be undone.
+            </span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => deleteMut.mutate()}
+              disabled={deleteMut.isLoading}
+            >
+              {deleteMut.isLoading ? "Deleting..." : "Yes, delete"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setConfirmDelete(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

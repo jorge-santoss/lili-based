@@ -9,6 +9,8 @@ import { authGuard } from "../middlewares/authguard.js";
 import adminRouter from "./admin.router.js";
 import assoRouter from "./asso.router.js";
 import adminRestaurantsRouter from "./restaurants.admin.router.js";
+import restoRouter from "./resto.router.js";
+
 
 
 
@@ -36,6 +38,9 @@ app.route("/admin", adminRouter);
 
 // Asso routes => /api/asso/...
 app.route("/api/asso", assoRouter);          // <--- add this
+
+// Resto routes => /api/resto/...
+app.route("/api/resto", restoRouter);
 
 app.route("/admin/restaurants", adminRestaurantsRouter);
 
